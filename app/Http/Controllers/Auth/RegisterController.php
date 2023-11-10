@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
 use App\Models\User;
-use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+// use GuzzleHttp\Psr7\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Providers\RouteServiceProvider;
+use App\Traits\UploadImage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Auth\RegistersUsers;
 
 class RegisterController extends Controller
 {
@@ -22,7 +25,7 @@ class RegisterController extends Controller
     |
     */
 
-    use RegistersUsers;
+    use RegistersUsers, UploadImage;
 
     /**
      * Where to redirect users after registration.
@@ -50,8 +53,12 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'f_name' => ['required', 'string', 'max:255'],
+            'l_name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'unique:users'],
+            'phone' => ['required', 'string', 'max:11', 'min:11', 'unique:users'],
+            'image' => ['required'],
+            'gender' => ['required', 'in:m,f'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
     }
@@ -64,9 +71,14 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        $imageName = $this->upload(request()->file('image'), 'user-', 'users');
         return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
+            'first_name' => $data['f_name'],
+            'last_name' => $data['l_name'],
+            'phone' => $data['phone'],
+            'image' => "$imageName",
+            'username' => $data['username'],
+            'gender' => $data['gender'],
             'password' => Hash::make($data['password']),
         ]);
     }
